@@ -101,7 +101,7 @@
 		_scrollView.delegate=self;
 		_scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
 		_scrollView.multipleTouchEnabled=YES;
-		_scrollView.scrollEnabled=YES;
+		_scrollView.scrollEnabled=NO;
 		_scrollView.directionalLockEnabled=YES;
 		_scrollView.canCancelContentTouches=YES;
 		_scrollView.delaysContentTouches=YES;
@@ -147,7 +147,17 @@
 	}
 #endif
 	
-
+    UISwipeGestureRecognizer *grRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self
+                                                                                  action:@selector(goPreviousMedia)];
+    grRight.direction = UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:grRight];
+    [grRight release];
+    
+    UISwipeGestureRecognizer *grLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self
+                                                                                 action:@selector(goNextMedia)];
+    grLeft.direction = UISwipeGestureRecognizerDirectionLeft;
+    [self.view addGestureRecognizer:grLeft];
+    [grLeft release];
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -199,7 +209,7 @@
 	}	
 	
 	if ([self.navigationController isToolbarHidden] && (!_popover || ([self.photoSource numberOfPhotos] > 1))) {
-		[self.navigationController setToolbarHidden:NO animated:YES];
+		[self.navigationController setToolbarHidden:NO animated:NO];
 	}
 	
 	if (!_popover) {
@@ -244,7 +254,7 @@
 		
 	} else {
 		
-		[self.navigationController setToolbarHidden:_oldToolBarHidden animated:YES];
+		//[self.navigationController setToolbarHidden:_oldToolBarHidden animated:YES];
 		
 	}
 	
@@ -334,6 +344,10 @@
 			[doneButton release];
 		}
 	} else if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:@"Done" style:UIBarButtonItemStyleDone target:self action:@selector(done:)];
+        self.navigationItem.leftBarButtonItem = doneButton;
+        [doneButton release];
+        
 		[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:YES];
 	}
 #else 
@@ -343,7 +357,10 @@
 	UIBarButtonItem *action = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonHit:)];
 	UIBarButtonItem *flex = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
 	
-	if ([self.photoSource numberOfPhotos] > 1) {
+	if ([self.photoSource numberOfPhotos] > 1 //||
+        //([self.delegate respondsToSelector:@selector(photoViewControllerGoNext:)] &&
+         //[self.delegate respondsToSelector:@selector(photoViewControllerGoPrevious:)])
+        ) {
 		
 		UIBarButtonItem *fixedCenter = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
 		fixedCenter.width = 80.0f;
@@ -655,21 +672,33 @@
 }
 
 - (void)moveForward:(id)sender{
-	[self moveToPhotoAtIndex:[self centerPhotoIndex]+1 animated:NO];	
+    if ([self.delegate respondsToSelector:@selector(photoViewControllerGoNext:)]) {
+        [self.delegate photoViewControllerGoNext:self];
+    }
+    if ([self.photoSource numberOfPhotos] > 1) {
+        [self moveToPhotoAtIndex:[self centerPhotoIndex]+1 animated:NO];
+    }
 }
 
 - (void)moveBack:(id)sender{
-	[self moveToPhotoAtIndex:[self centerPhotoIndex]-1 animated:NO];
+    if ([self.delegate respondsToSelector:@selector(photoViewControllerGoPrevious:)]) {
+        [self.delegate photoViewControllerGoPrevious:self];
+    }
+    if ([self.photoSource numberOfPhotos] > 1) {
+        [self moveToPhotoAtIndex:[self centerPhotoIndex]-1 animated:NO];
+    }
 }
 
-- (void)setViewState {	
+- (void)setViewState {
 	
 	if (_leftButton) {
-		_leftButton.enabled = !(_pageIndex-1 < 0);
+		_leftButton.enabled = (!(_pageIndex-1 < 0) ||
+                               [self.delegate respondsToSelector:@selector(photoViewControllerGoPrevious:)]);
 	}
 	
 	if (_rightButton) {
-		_rightButton.enabled = !(_pageIndex+1 >= [self.photoSource numberOfPhotos]);
+		_rightButton.enabled = (!(_pageIndex+1 >= [self.photoSource numberOfPhotos]) ||
+                                [self.delegate respondsToSelector:@selector(photoViewControllerGoNext:)]);
 	}
 	
 	if (_actionButton) {
@@ -869,6 +898,19 @@
 	photoView.frame = frame;
 }
 
+- (void)goPreviousMedia
+{
+    if ([self.delegate respondsToSelector:@selector(photoViewControllerGoPrevious:)]) {
+        [self.delegate photoViewControllerGoPrevious:self];
+    }
+}
+
+- (void)goNextMedia
+{
+    if ([self.delegate respondsToSelector:@selector(photoViewControllerGoNext:)]) {
+        [self.delegate photoViewControllerGoNext:self];
+    }
+}
 
 #pragma mark -
 #pragma mark UIScrollView Delegate Methods

@@ -384,7 +384,12 @@
 
 
 #pragma mark -
-#pragma mark UIScrollView Delegate Methods
+#pragma mark UIScrollViewDelegate Methods
+
+- (void)scrollViewWillBeginZooming:(UIScrollView *)scrollView withView:(UIView *)view
+{
+    self.scrollView.scrollEnabled = YES;
+}
 
 - (void)killZoomAnimationDidStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context{
 	
@@ -394,6 +399,7 @@
 		self.imageView.frame = self.scrollView.bounds;
 		[self layoutScrollViewAnimated:NO];
 		
+        self.scrollView.scrollEnabled = NO;
 	}
 	
 }
@@ -421,7 +427,8 @@
 	self.scrollView.frame = CGRectMake(leftOffset, topOffset, newWidth, newHeight);
 	self.imageView.frame = self.scrollView.bounds;
 	[UIView commitAnimations];
-
+    
+    self.scrollView.scrollEnabled = NO;
 }
 
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView{
