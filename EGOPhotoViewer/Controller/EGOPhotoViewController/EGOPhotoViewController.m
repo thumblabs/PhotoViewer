@@ -25,6 +25,7 @@
 //
 
 #import "EGOPhotoViewController.h"
+#import "DMActivityInstagram.h"
 
 @interface EGOPhotoViewController (Private)
 - (void)loadScrollViewWithPage:(NSInteger)page;
@@ -911,118 +912,24 @@
 
 
 #pragma mark -
-#pragma mark Actions
-
-- (void)doneSavingImage{
-	NSLog(@"done saving image");
-}
-
-- (void)savePhoto{
-	
-	UIImageWriteToSavedPhotosAlbum(((EGOPhotoImageView*)[self.photoViews objectAtIndex:_pageIndex]).imageView.image, nil, nil, nil);
-	
-}
-
-- (void)copyPhoto{
-	
-	[[UIPasteboard generalPasteboard] setData:UIImagePNGRepresentation(((EGOPhotoImageView*)[self.photoViews objectAtIndex:_pageIndex]).imageView.image) forPasteboardType:@"public.png"];
-	
-}
-
-- (void)emailPhoto{
-	
-	MFMailComposeViewController *mailViewController = [[MFMailComposeViewController alloc] init];
-	[mailViewController setSubject:@"Shared Photo"];
-	[mailViewController addAttachmentData:[NSData dataWithData:UIImagePNGRepresentation(((EGOPhotoImageView*)[self.photoViews objectAtIndex:_pageIndex]).imageView.image)] mimeType:@"image/png" fileName:@"Photo.png"];
-	mailViewController.mailComposeDelegate = self;
-	
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 30200
-	if (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad) {
-		mailViewController.modalPresentationStyle = UIModalPresentationPageSheet;
-	}
-#endif
-	
-	[self presentModalViewController:mailViewController animated:YES];
-	[mailViewController release];
-	
-}
-
-- (void)mailComposeController:(MFMailComposeViewController*)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError*)error{
-	
-	[self dismissModalViewControllerAnimated:YES];
-	
-	NSString *mailError = nil;
-	
-	switch (result) {
-		case MFMailComposeResultSent: ; break;
-		case MFMailComposeResultFailed: mailError = @"Failed sending media, please try again...";
-			break;
-		default:
-			break;
-	}
-	
-	if (mailError != nil) {
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:mailError delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-		[alert show];
-		[alert release];
-	}
-	
-}
-
-
-#pragma mark -
 #pragma mark UIActionSheet Methods
 
 - (void)actionButtonHit:(id)sender{
 	
-	UIActionSheet *actionSheet;
-	
-	if ([MFMailComposeViewController canSendMail]) {
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 30200
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad && !_popover) {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Copy", @"Email", nil];
-		} else {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Copy", @"Email", nil];
-		}
-#else
-		actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Copy", @"Email", nil];
-#endif
-		
-	} else {
-		
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 30200
-		if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad && !_popover) {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles:@"Copy", nil];
-		} else {
-			actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Copy", nil];
-		}
-#else
-		actionSheet = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Copy", nil];
-#endif
-		
-	}
-	
-	actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
-	actionSheet.delegate = self;
-	
-	[actionSheet showInView:self.view];
-	[self setBarsHidden:YES animated:YES];
-	
-	[actionSheet release];
-	
-}
+    DMActivityInstagram *instagramActivity = [[DMActivityInstagram alloc] init];
+    
+    UIImage *shareImage = ((EGOPhotoImageView*)[self.photoViews objectAtIndex:_pageIndex]).imageView.image;
+    
+    NSArray *activityItems = @[shareImage];
+    
+    UIActivityViewController *activityController = [[UIActivityViewController alloc] initWithActivityItems:activityItems
+                                                                                     applicationActivities:@[instagramActivity]];
 
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    activityController.excludedActivityTypes = @[UIActivityTypePostToWeibo, UIActivityTypePrint];
+    
+    [self presentViewController:activityController animated:YES completion:nil];
+	//[self setBarsHidden:YES animated:YES];
 	
-	[self setBarsHidden:NO animated:YES];
-	
-	if (buttonIndex == actionSheet.cancelButtonIndex) {
-		return;
-	} else if (buttonIndex == actionSheet.firstOtherButtonIndex) {
-		[self copyPhoto];	
-	} else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
-		[self emailPhoto];	
-	}
 }
 
 
