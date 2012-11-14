@@ -377,7 +377,7 @@
 		UIBarButtonItem *left = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"egopv_left.png"] style:UIBarButtonItemStylePlain target:self action:@selector(moveBack:)];
 		UIBarButtonItem *right = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"egopv_right.png"] style:UIBarButtonItemStylePlain target:self action:@selector(moveForward:)];
 		
-		[self setToolbarItems:[NSArray arrayWithObjects:fixedLeft, flex, left, fixedCenter, right, flex, action, nil]];
+		[self setToolbarItems:[NSArray arrayWithObjects:fixedLeft, action, flex, left, fixedCenter, right, flex, nil]];
 		
 		_rightButton = right;
 		_leftButton = left;
@@ -388,7 +388,7 @@
 		[left release];
 		
 	} else {
-		[self setToolbarItems:[NSArray arrayWithObjects:flex, action, nil]];
+		[self setToolbarItems:[NSArray arrayWithObjects:action, flex, nil]];
 	}
 	
 	_actionButton=action;
