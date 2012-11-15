@@ -967,7 +967,7 @@
     UIActivityViewController *activityController = [[UIActivityViewController alloc] initWithActivityItems:activityItems
                                                                                      applicationActivities:@[instagramActivity]];
 
-    activityController.excludedActivityTypes = @[UIActivityTypePostToWeibo, UIActivityTypePrint];
+    activityController.excludedActivityTypes = @[UIActivityTypePostToWeibo, UIActivityTypePrint, UIActivityTypeSaveToCameraRoll];
     
     [self presentViewController:activityController animated:YES completion:nil];
 	//[self setBarsHidden:YES animated:YES];
