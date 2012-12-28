@@ -43,6 +43,9 @@
 
 
 @implementation EGOPhotoViewController
+{
+    CGPoint _panStartLocation;
+}
 
 @synthesize scrollView=_scrollView;
 @synthesize photoSource=_photoSource; 
@@ -147,17 +150,29 @@
 	}
 #endif
 	
-    UISwipeGestureRecognizer *grRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self
-                                                                                  action:@selector(goPreviousMedia)];
-    grRight.direction = UISwipeGestureRecognizerDirectionRight;
-    [self.view addGestureRecognizer:grRight];
-    [grRight release];
-    
-    UISwipeGestureRecognizer *grLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self
-                                                                                 action:@selector(goNextMedia)];
-    grLeft.direction = UISwipeGestureRecognizerDirectionLeft;
-    [self.view addGestureRecognizer:grLeft];
-    [grLeft release];
+    UIPanGestureRecognizer *grPan = [[UIPanGestureRecognizer alloc] initWithTarget:self
+                                                                            action:@selector(panDetected:)];
+    [self.view addGestureRecognizer:grPan];
+    grPan.delaysTouchesBegan = YES;
+    [grPan release];
+}
+
+- (void)panDetected:(UIPanGestureRecognizer *)sender
+{
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        _panStartLocation = [sender locationInView:self.view];
+    }
+    else if (sender.state == UIGestureRecognizerStateEnded) {
+        CGPoint stopLocation = [sender locationInView:self.view];
+        CGFloat dx = stopLocation.x - _panStartLocation.x;
+        NSLog(@"pan: %f", dx);
+        if (dx > 20) {
+            [self goPreviousMedia];
+        }
+        else if (dx < -20) {
+            [self goNextMedia];
+        }
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated{
